@@ -3,7 +3,7 @@ import {
 } from '@jupyterlab/application';
 
 import {
-  ABCWidgetFactory, DocumentRegistry, DocumentWidget,
+  ABCWidgetFactory, DocumentRegistry, IDocumentWidget, DocumentWidget,
 } from '@jupyterlab/docregistry';
 
 import {
@@ -19,16 +19,22 @@ import {
 } from '@phosphor/coreutils';
 
 import {
-  Widget
+  Widget, // BoxLayout
 } from '@phosphor/widgets';
 
 import {
   Message
 } from '@phosphor/messaging';
 
-import { read } from 'vega';
+import {
+  read
+} from 'vega';
 
-import { CreateVoyager, Voyager } from 'datavoyager';
+import {
+  CreateVoyager, Voyager
+} from 'datavoyager';
+
+import "datavoyager/build/style.css";
 
 import '../style/index.css';
 
@@ -36,80 +42,80 @@ const FACTORY = 'Xkcd';
 /**
  * An xckd comic viewer.
  */
-class XkcdWidget extends DocumentWidget<Widget> {
+class XkcdWidget extends Widget {
   /**
    * Construct a new xkcd widget.
    */
-  constructor(options: DocumentWidget.IOptions<Widget>) {
-    super({ ...options });
-    console.log("XkcdWidget::constructor", options);
+  constructor(context: DocumentRegistry.Context) {
+    super();
+    console.log("XkcdWidget::constructor", context);
+    this._context = context;
 
     this._onTitleChanged();
-    this.context.pathChanged.connect(this._onTitleChanged, this);
-    this.context.ready.then(() => { this._onContextReady(); });
+    this._context.pathChanged.connect(this._onTitleChanged, this);
+    this._context.ready.then(() => { this._onContextReady(); });
   }
 
   protected onAfterShow(msg: Message): void {
-    console.log("XkcdWidget::onAfterShow")
-    this._loadEditor(this.node);
+    console.log("XkcdWidget::onAfterShow");
+    this._loadVoyager(this.node);
     this._onContentChanged();
   }
 
-  private _loadEditor(node: HTMLElement): void {
-    this._editor = CreateVoyager(node, {
+  private _loadVoyager(node: HTMLElement): void {
+    this._voyager = CreateVoyager(node, {
       showDataSourceSelector: false,
       serverUrl: null,
       hideHeader: true,
       hideFooter: true,
       relatedViews: "initiallyCollapsed",
       wildcards: "enabled"
-    }, undefined)
+    }, { values: [] });
+    console.log("voyager XXXXXXXXXXXXXX", this._voyager);
   }
 
   private _onContextReady(): void {
     console.log("XkcdWidget::_onContextReady");
-
-    // Set the editor model value.
     this._onContentChanged();
   }
 
   private _onTitleChanged(): void {
-    this.title.label = PathExt.basename(this.context.localPath);
+    this.title.label = PathExt.basename(this._context.localPath);
   }
 
   private _onContentChanged(): void {
-    if (!this._editor) {
+    if (!this._voyager) {
       return;
     }
 
-    const values = read(this.context.model.toString(), { type: 'csv', parse: 'auto' });
+    const values = read(this._context.model.toString(), { type: 'csv', parse: 'auto' });
     console.log(values);
-    this._editor.updateData(values);
+    this._voyager.updateData({ values });
   }
 
   get ready(): Promise<void> {
     return this._ready.promise;
   }
 
-  readonly context: DocumentRegistry.Context;
-  private _editor: Voyager;
+  private _context: DocumentRegistry.Context;
+  private _voyager: Voyager;
   private _ready = new PromiseDelegate<void>();
 
 };
 
 export
-  class XkcdFactory extends ABCWidgetFactory<XkcdWidget, DocumentRegistry.IModel> {
+  class XkcdFactory extends ABCWidgetFactory<IDocumentWidget<XkcdWidget>> {
   /**
   * Create a new widget given a context.
   */
   constructor(options: DocumentRegistry.IWidgetFactoryOptions) {
-    super(options);
     console.log("XkcdFactory::constructor", options);
+    super(options);
   }
 
-  protected createNewWidget(context: DocumentRegistry.Context): XkcdWidget {
+  protected createNewWidget(context: DocumentRegistry.IContext<DocumentRegistry.IModel>): IDocumentWidget<XkcdWidget> {
     console.log("XkcdFactory::createNewWidget", context.path);
-    return new XkcdWidget({ context, content: new Widget() });
+    return new DocumentWidget({ context, content: new XkcdWidget(context) });
   }
 }
 
@@ -121,7 +127,7 @@ function activate(app: JupyterLab, palette: ICommandPalette, restorer: ILayoutRe
   console.log('JupyterLab extension jupyterlab_xkcd is activated!', app, palette, restorer);
   const namespace = 'xkcd';
   const factory = new XkcdFactory({ name: FACTORY, fileTypes: ['csv'] });
-  const tracker = new InstanceTracker<XkcdWidget>({ namespace });
+  const tracker = new InstanceTracker<IDocumentWidget<XkcdWidget>>({ namespace });
   // Handle state restoration.
   restorer.restore(tracker, {
     command: 'docmanager:open',
