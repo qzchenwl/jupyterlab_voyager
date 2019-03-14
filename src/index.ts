@@ -3,11 +3,19 @@ import {
 } from '@jupyterlab/application';
 
 import {
+  ABCWidgetFactory, DocumentRegistry, DocumentWidget,
+} from '@jupyterlab/docregistry';
+
+import {
   ICommandPalette, InstanceTracker
 } from '@jupyterlab/apputils';
 
 import {
-  JSONExt
+  PathExt
+} from '@jupyterlab/coreutils';
+
+import {
+  PromiseDelegate
 } from '@phosphor/coreutils';
 
 import {
@@ -18,104 +26,117 @@ import {
   Message
 } from '@phosphor/messaging';
 
+import { read } from 'vega';
 
+import { CreateVoyager, Voyager } from 'datavoyager';
 
 import '../style/index.css';
 
+const FACTORY = 'Xkcd';
 /**
  * An xckd comic viewer.
  */
-class XkcdWidget extends Widget {
+class XkcdWidget extends DocumentWidget<Widget> {
   /**
    * Construct a new xkcd widget.
    */
-  constructor() {
-    super();
+  constructor(options: DocumentWidget.IOptions<Widget>) {
+    super({ ...options });
+    console.log("XkcdWidget::constructor", options);
 
-    this.id = 'xkcd-jupyterlab';
-    this.title.label = 'xkcd.com';
-    this.title.closable = true;
-    this.addClass('jp-xkcdWidget');
-
-    this.img = document.createElement('img');
-    this.img.className = 'jp-xkcdCartoon';
-    this.node.appendChild(this.img);
-
-    this.img.insertAdjacentHTML('afterend',
-      `<div class="jp-xkcdAttribution">
-        <a href="https://creativecommons.org/licenses/by-nc/2.5/" class="jp-xkcdAttribution" target="_blank">
-          <img src="https://licensebuttons.net/l/by-nc/2.5/80x15.png" />
-        </a>
-      </div>`
-    );
+    this._onTitleChanged();
+    this.context.pathChanged.connect(this._onTitleChanged, this);
+    this.context.ready.then(() => { this._onContextReady(); });
   }
 
-  /**
-   * The image element associated with the widget.
-   */
-  readonly img: HTMLImageElement;
-
-  /**
-   * Handle update requests for the widget.
-   */
-  onUpdateRequest(msg: Message): void {
-    console.log("onUpdateRequest", msg);
-    fetch('https://egszlpbmle.execute-api.us-east-1.amazonaws.com/prod').then(response => {
-      return response.json();
-    }).then(data => {
-      this.img.src = data.img;
-      this.img.alt = data.title;
-      this.img.title = data.alt;
-    });
+  protected onAfterShow(msg: Message): void {
+    console.log("XkcdWidget::onAfterShow")
+    this._loadEditor(this.node);
+    this._onContentChanged();
   }
+
+  private _loadEditor(node: HTMLElement): void {
+    this._editor = CreateVoyager(node, {
+      showDataSourceSelector: false,
+      serverUrl: null,
+      hideHeader: true,
+      hideFooter: true,
+      relatedViews: "initiallyCollapsed",
+      wildcards: "enabled"
+    }, undefined)
+  }
+
+  private _onContextReady(): void {
+    console.log("XkcdWidget::_onContextReady");
+
+    // Set the editor model value.
+    this._onContentChanged();
+  }
+
+  private _onTitleChanged(): void {
+    this.title.label = PathExt.basename(this.context.localPath);
+  }
+
+  private _onContentChanged(): void {
+    if (!this._editor) {
+      return;
+    }
+
+    const values = read(this.context.model.toString(), { type: 'csv', parse: 'auto' });
+    console.log(values);
+    this._editor.updateData(values);
+  }
+
+  get ready(): Promise<void> {
+    return this._ready.promise;
+  }
+
+  readonly context: DocumentRegistry.Context;
+  private _editor: Voyager;
+  private _ready = new PromiseDelegate<void>();
+
 };
+
+export
+  class XkcdFactory extends ABCWidgetFactory<XkcdWidget, DocumentRegistry.IModel> {
+  /**
+  * Create a new widget given a context.
+  */
+  constructor(options: DocumentRegistry.IWidgetFactoryOptions) {
+    super(options);
+    console.log("XkcdFactory::constructor", options);
+  }
+
+  protected createNewWidget(context: DocumentRegistry.Context): XkcdWidget {
+    console.log("XkcdFactory::createNewWidget", context.path);
+    return new XkcdWidget({ context, content: new Widget() });
+  }
+}
+
 
 /**
  * Activate the xckd widget extension.
  */
 function activate(app: JupyterLab, palette: ICommandPalette, restorer: ILayoutRestorer) {
   console.log('JupyterLab extension jupyterlab_xkcd is activated!', app, palette, restorer);
-
-  // Declare a widget variable
-  let widget: XkcdWidget;
-
-  // Add an application command
-  const command: string = 'xkcd:open';
-  app.commands.addCommand(command, {
-    label: 'Random xkcd comic',
-    execute: () => {
-      if (!widget) {
-        // Create a new widget if one does not exist
-        widget = new XkcdWidget();
-        widget.update();
-      }
-      if (!tracker.has(widget)) {
-        // Track the state of the widget for later restoration
-        tracker.add(widget);
-      }
-      if (!widget.isAttached) {
-        // Attach the widget to the main work area if it's not there
-        app.shell.addToMainArea(widget);
-      } else {
-        // Refresh the comic in the widget
-        widget.update();
-      }
-      // Activate the widget
-      app.shell.activateById(widget.id);
-    }
-  });
-
-  // Add the command to the palette.
-  palette.addItem({ command, category: 'Tutorial' });
-
-  // Track and restore the widget state
-  let tracker = new InstanceTracker<Widget>({ namespace: 'xkcd' });
+  const namespace = 'xkcd';
+  const factory = new XkcdFactory({ name: FACTORY, fileTypes: ['csv'] });
+  const tracker = new InstanceTracker<XkcdWidget>({ namespace });
+  // Handle state restoration.
   restorer.restore(tracker, {
-    command,
-    args: () => JSONExt.emptyObject,
-    name: () => 'xkcd'
+    command: 'docmanager:open',
+    args: widget => ({ path: widget.context.path, factory: FACTORY }),
+    name: widget => widget.context.path
   });
 
+  factory.widgetCreated.connect((sender, widget) => {
+    widget.context.pathChanged.connect(() => {
+      tracker.save(widget);
+    });
+    tracker.add(widget);
+  });
+
+  app.docRegistry.addWidgetFactory(factory);
 };
 
 
