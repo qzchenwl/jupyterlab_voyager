@@ -38,17 +38,17 @@ import "datavoyager/build/style.css";
 
 import '../style/index.css';
 
-const FACTORY = 'Xkcd';
+const FACTORY = 'Voyager';
 /**
  * An xckd comic viewer.
  */
-class XkcdWidget extends Widget {
+class VoyagerWidget extends Widget {
   /**
-   * Construct a new xkcd widget.
+   * Construct a new voyager widget.
    */
   constructor(context: DocumentRegistry.Context) {
     super();
-    console.log("XkcdWidget::constructor", context);
+    console.log("VoyagerWidget::constructor", context);
     this._context = context;
 
     this._onTitleChanged();
@@ -57,7 +57,7 @@ class XkcdWidget extends Widget {
   }
 
   protected onAfterShow(msg: Message): void {
-    console.log("XkcdWidget::onAfterShow");
+    console.log("VoyagerWidget::onAfterShow");
     this._loadVoyager(this.node);
     this._onContentChanged();
   }
@@ -75,7 +75,7 @@ class XkcdWidget extends Widget {
   }
 
   private _onContextReady(): void {
-    console.log("XkcdWidget::_onContextReady");
+    console.log("VoyagerWidget::_onContextReady");
     this._onContentChanged();
   }
 
@@ -104,18 +104,18 @@ class XkcdWidget extends Widget {
 };
 
 export
-  class XkcdFactory extends ABCWidgetFactory<IDocumentWidget<XkcdWidget>> {
+  class VoyagerFactory extends ABCWidgetFactory<IDocumentWidget<VoyagerWidget>> {
   /**
   * Create a new widget given a context.
   */
   constructor(options: DocumentRegistry.IWidgetFactoryOptions) {
-    console.log("XkcdFactory::constructor", options);
+    console.log("VoyagerFactory::constructor", options);
     super(options);
   }
 
-  protected createNewWidget(context: DocumentRegistry.IContext<DocumentRegistry.IModel>): IDocumentWidget<XkcdWidget> {
-    console.log("XkcdFactory::createNewWidget", context.path);
-    return new DocumentWidget({ context, content: new XkcdWidget(context) });
+  protected createNewWidget(context: DocumentRegistry.IContext<DocumentRegistry.IModel>): IDocumentWidget<VoyagerWidget> {
+    console.log("VoyagerFactory::createNewWidget", context.path);
+    return new DocumentWidget({ context, content: new VoyagerWidget(context) });
   }
 }
 
@@ -124,10 +124,10 @@ export
  * Activate the xckd widget extension.
  */
 function activate(app: JupyterLab, palette: ICommandPalette, restorer: ILayoutRestorer) {
-  console.log('JupyterLab extension jupyterlab_xkcd is activated!', app, palette, restorer);
-  const namespace = 'xkcd';
-  const factory = new XkcdFactory({ name: FACTORY, fileTypes: ['csv'] });
-  const tracker = new InstanceTracker<IDocumentWidget<XkcdWidget>>({ namespace });
+  console.log('JupyterLab extension jupyterlab_voyager is activated!', app, palette, restorer);
+  const namespace = 'voyager';
+  const factory = new VoyagerFactory({ name: FACTORY, fileTypes: ['csv'] });
+  const tracker = new InstanceTracker<IDocumentWidget<VoyagerWidget>>({ namespace });
   // Handle state restoration.
   restorer.restore(tracker, {
     command: 'docmanager:open',
@@ -147,10 +147,10 @@ function activate(app: JupyterLab, palette: ICommandPalette, restorer: ILayoutRe
 
 
 /**
- * Initialization data for the jupyterlab_xkcd extension.
+ * Initialization data for the jupyterlab_voyager extension.
  */
 const extension: JupyterLabPlugin<void> = {
-  id: 'jupyterlab_xkcd',
+  id: 'jupyterlab_voyager',
   autoStart: true,
   requires: [ICommandPalette, ILayoutRestorer],
   activate: activate

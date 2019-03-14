@@ -1,15 +1,15 @@
 {
-  "name": "jupyterlab_xkcd",
+  "name": "jupyterlab_voyager",
   "version": "0.1.0",
-  "description": "Show a random xkcd.com comic in a JupyterLab panel",
+  "description": "A JupyterLab extension for rendering CSV",
   "keywords": [
     "jupyter",
     "jupyterlab",
     "jupyterlab-extension"
   ],
-  "homepage": "https://github.com/qzchenwl/jupyterlab_xkcd",
+  "homepage": "https://github.com/qzchenwl/jupyterlab_voyager",
   "bugs": {
-    "url": "https://github.com/qzchenwl/jupyterlab_xkcd/issues"
+    "url": "https://github.com/qzchenwl/jupyterlab_voyager/issues"
   },
   "license": "BSD-3-Clause",
   "author": "qzchenwl",
@@ -21,7 +21,7 @@
   "types": "lib/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/qzchenwl/jupyterlab_xkcd.git"
+    "url": "https://github.com/qzchenwl/jupyterlab_voyager.git"
   },
   "scripts": {
     "build": "tsc",
