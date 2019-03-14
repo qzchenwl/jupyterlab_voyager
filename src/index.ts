@@ -23,10 +23,6 @@ import {
 } from '@phosphor/widgets';
 
 import {
-  Message
-} from '@phosphor/messaging';
-
-import {
   read
 } from 'vega';
 
@@ -52,14 +48,9 @@ class VoyagerWidget extends Widget {
     this._context = context;
 
     this._onTitleChanged();
+    this._loadVoyager(this.node);
     this._context.pathChanged.connect(this._onTitleChanged, this);
     this._context.ready.then(() => { this._onContextReady(); });
-  }
-
-  protected onAfterShow(msg: Message): void {
-    console.log("VoyagerWidget::onAfterShow");
-    this._loadVoyager(this.node);
-    this._onContentChanged();
   }
 
   private _loadVoyager(node: HTMLElement): void {
@@ -76,21 +67,13 @@ class VoyagerWidget extends Widget {
 
   private _onContextReady(): void {
     console.log("VoyagerWidget::_onContextReady");
-    this._onContentChanged();
+    this._ready.resolve();
+    const values = read(this._context.model.toString(), { type: 'csv', parse: 'auto' });
+    this._voyager.updateData({ values });
   }
 
   private _onTitleChanged(): void {
     this.title.label = PathExt.basename(this._context.localPath);
-  }
-
-  private _onContentChanged(): void {
-    if (!this._voyager) {
-      return;
-    }
-
-    const values = read(this._context.model.toString(), { type: 'csv', parse: 'auto' });
-    console.log(values);
-    this._voyager.updateData({ values });
   }
 
   get ready(): Promise<void> {

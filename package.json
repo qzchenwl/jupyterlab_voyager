@@ -38,7 +38,6 @@
     "@phosphor/messaging": "^1.2.2",
     "@phosphor/widgets": "^1.6.0",
     "datavoyager": "2.0.0-alpha.24",
-    "node-sass": "^4.9.0",
     "vega": "5.2.0"
   },
   "devDependencies": {
