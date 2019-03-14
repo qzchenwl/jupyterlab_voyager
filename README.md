@@ -1,7 +1,6 @@
-# jupyterlab_xkcd
+# jupyterlab_voyager
 
-Show a random xkcd.com comic in a JupyterLab panel
-
+A JupyterLab MIME renderer extension to view CSV and JSON data in [Voyager 2](https://github.com/vega/voyager#voyager-2).
 
 ## Prerequisites
 
@@ -10,7 +9,7 @@ Show a random xkcd.com comic in a JupyterLab panel
 ## Installation
 
 ```bash
-jupyter labextension install jupyterlab_xkcd
+jupyter labextension install @qzchenwl/jupyterlab_voyager
 ```
 
 ## Development
