@@ -68,7 +68,8 @@ class VoyagerWidget extends Widget {
   private _onContextReady(): void {
     console.log("VoyagerWidget::_onContextReady");
     this._ready.resolve();
-    const values = read(this._context.model.toString(), { type: 'csv', parse: 'auto' });
+    const type = PathExt.extname(this._context.localPath).substr(1);
+    const values = read(this._context.model.toString(), { type, parse: 'auto' });
     this._voyager.updateData({ values });
   }
 
@@ -109,7 +110,7 @@ export
 function activate(app: JupyterLab, palette: ICommandPalette, restorer: ILayoutRestorer) {
   console.log('JupyterLab extension jupyterlab_voyager is activated!', app, palette, restorer);
   const namespace = 'voyager';
-  const factory = new VoyagerFactory({ name: FACTORY, fileTypes: ['csv'] });
+  const factory = new VoyagerFactory({ name: FACTORY, fileTypes: ['csv', 'json'] });
   const tracker = new InstanceTracker<IDocumentWidget<VoyagerWidget>>({ namespace });
   // Handle state restoration.
   restorer.restore(tracker, {
