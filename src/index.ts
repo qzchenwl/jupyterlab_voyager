@@ -59,7 +59,7 @@ class VoyagerWidget extends Widget {
       serverUrl: null,
       hideHeader: true,
       hideFooter: true,
-      relatedViews: "initiallyCollapsed",
+      relatedViews: "initiallyShown",
       wildcards: "enabled"
     }, { values: [] });
     console.log("voyager XXXXXXXXXXXXXX", this._voyager);
