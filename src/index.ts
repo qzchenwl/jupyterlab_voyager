@@ -93,7 +93,7 @@ export
  * Activate the xckd widget extension.
  */
 function activate(app: JupyterLab, palette: ICommandPalette, restorer: ILayoutRestorer) {
-  console.log('JupyterLab extension jupyterlab_voyager is activated!', app, palette, restorer);
+  console.log('JupyterLab extension jupyterlab_voyager@^0.1.6 is activated!', app, palette, restorer);
   const namespace = 'voyager';
   const factory = new VoyagerFactory({ name: FACTORY, fileTypes: ['csv', 'json'] });
   const tracker = new InstanceTracker<IDocumentWidget<VoyagerWidget>>({ namespace });
