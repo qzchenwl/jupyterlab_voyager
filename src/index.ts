@@ -19,7 +19,7 @@ import {
 } from '@phosphor/coreutils';
 
 import {
-  Widget, // BoxLayout
+  Widget,
 } from '@phosphor/widgets';
 
 import {
@@ -35,13 +35,8 @@ import "datavoyager/build/style.css";
 import '../style/index.css';
 
 const FACTORY = 'Voyager';
-/**
- * An xckd comic viewer.
- */
+
 class VoyagerWidget extends Widget {
-  /**
-   * Construct a new voyager widget.
-   */
   constructor(context: DocumentRegistry.Context) {
     super();
     console.log("VoyagerWidget::constructor", context);
@@ -62,11 +57,9 @@ class VoyagerWidget extends Widget {
       relatedViews: "initiallyShown",
       wildcards: "enabled"
     }, { values: [] });
-    console.log("voyager XXXXXXXXXXXXXX", this._voyager);
   }
 
   private _onContextReady(): void {
-    console.log("VoyagerWidget::_onContextReady");
     this._ready.resolve();
     const type = PathExt.extname(this._context.localPath).substr(1);
     const values = read(this._context.model.toString(), { type, parse: 'auto' });
@@ -89,16 +82,11 @@ class VoyagerWidget extends Widget {
 
 export
   class VoyagerFactory extends ABCWidgetFactory<IDocumentWidget<VoyagerWidget>> {
-  /**
-  * Create a new widget given a context.
-  */
   constructor(options: DocumentRegistry.IWidgetFactoryOptions) {
-    console.log("VoyagerFactory::constructor", options);
     super(options);
   }
 
   protected createNewWidget(context: DocumentRegistry.IContext<DocumentRegistry.IModel>): IDocumentWidget<VoyagerWidget> {
-    console.log("VoyagerFactory::createNewWidget", context.path);
     return new DocumentWidget({ context, content: new VoyagerWidget(context) });
   }
 }
