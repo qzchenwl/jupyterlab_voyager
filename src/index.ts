@@ -32,16 +32,13 @@ import {
 
 import "datavoyager/build/style.css";
 
-import '../style/index.css';
-
 const FACTORY = 'Voyager';
 
 class VoyagerWidget extends Widget {
   constructor(context: DocumentRegistry.Context) {
     super();
-    console.log("VoyagerWidget::constructor", context);
+    this.addClass("jp-Voyager");
     this._context = context;
-
     this._onTitleChanged();
     this._loadVoyager(this.node);
     this._context.pathChanged.connect(this._onTitleChanged, this);
